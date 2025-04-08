@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}TimeTracker - Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1>{{ company.name }} Dashboard</h1>
+        <p class="text-muted">Standard weekly hours: {{ company.standard_hours }} hours</p>
+    </div>
+</div>
+
+<!-- Weekly Hours Overview -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">Weekly Hours Overview</div>
+            <div class="card-body">
+                <p><strong>Current Week:</strong> {{ week_start_date.strftime('%Y-%m-%d') }} to {{ week_end_date.strftime('%Y-%m-%d') }}</p>
+                
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Weekly Hours</th>
+                                <th>Regular Hours</th>
+                                <th>Overtime Hours</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for employee in active_employees %}
+                            <tr>
+                                <td>{{ employee.first_name }} {{ employee.last_name }}</td>
+                                <td>{{ weekly_hours.get(employee.id, 0)|round(1) }}</td>
+                                <td>{{ min(weekly_hours.get(employee.id, 0), 45)|round(1) }}</td>
+                                <td>{{ max(0, weekly_hours.get(employee.id, 0) - 45)|round(1) }}</td>
+                                <td>
+                                    {% set employee_hours = weekly_hours.get(employee.id, 0) %}
+                                    {% if employee_hours > 55 %}
+                                    <span class="badge bg-danger">Exceeds Limit ({{ employee_hours|round(1) }}/55)</span>
+                                    {% elif employee_hours > 45 %}
+                                    {% set overtime = employee_hours - 45 %}
+                                    {% if overtime > 10 %}
+                                    <span class="badge bg-danger">Overtime Limit Exceeded ({{ overtime|round(1) }}/10)</span>
+                                    {% else %}
+                                    <span class="badge bg-warning">Overtime ({{ overtime|round(1) }}/10)</span>
+                                    {% endif %}
+                                    {% else %}
+                                    <span class="badge bg-success">Within Limits</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Active Employees</span>
+                {% if current_user.is_admin %}
+                <div>
+                    <a href="{{ url_for('export_monthly_timesheet') }}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-file-export"></i> Export Monthly Report
+                    </a>
+                    <a href="{{ url_for('add_employee') }}" class="btn btn-primary btn-sm ms-2">
+                        <i class="fas fa-user-plus"></i> Add Employee
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if employees %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Pay Rate</th>
+                                <th>Special Status</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for employee in employees %}
+                            <tr>
+                                <td>{{ employee.first_name }} {{ employee.last_name }}</td>
+                                <td>{{ employee.email }}</td>
+                                <td>R{{ employee.hourly_rate }}/hr (OT: R{{ employee.overtime_rate }}/hr)</td>
+                                <td>
+                                    {% if employee.is_sunday_worker %}
+                                    <span class="badge bg-success">Sunday Worker</span>
+                                    {% endif %}
+                                    {% if employee.is_holiday_worker %}
+                                    <span class="badge bg-warning ms-1">Holiday Worker</span>
+                                    {% endif %}
+                                    {% if employee.is_night_worker %}
+                                    <span class="badge bg-info ms-1">Night Worker</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if employee.id in active_timesheets %}
+                                    <span class="badge bg-success">Clocked In</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Clocked Out</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        {% if employee.id in active_timesheets %}
+                                        <a href="{{ url_for('clock_out', employee_id=employee.id) }}" class="btn btn-danger btn-sm clock-btn active-clock">
+                                            <i class="fas fa-sign-out-alt"></i> Clock Out
+                                        </a>
+                                        {% else %}
+                                        <a href="{{ url_for('clock_in', employee_id=employee.id) }}" class="btn btn-success btn-sm clock-btn">
+                                            <i class="fas fa-sign-in-alt"></i> Clock In
+                                        </a>
+                                        {% endif %}
+                                        
+                                        <a href="{{ url_for('employee_timesheets', employee_id=employee.id) }}" class="btn btn-info btn-sm ms-2">
+                                            <i class="fas fa-history"></i> History
+                                        </a>
+                                        
+                                        {% if current_user.is_admin %}
+                                        <a href="{{ url_for('edit_employee', employee_id=employee.id) }}" class="btn btn-outline-secondary btn-sm ms-2">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center">No active employees. {% if current_user.is_admin %}<a href="{{ url_for('add_employee') }}">Add an employee</a> to get started.{% endif %}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Overtime Rules Alert -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="alert alert-info">
+            <h5><i class="fas fa-info-circle"></i> Overtime Rules Summary</h5>
+            <p><strong>Normal weekdays:</strong> 1.5× after 8 hours | <strong>Saturdays:</strong> 1.5× | <strong>Sundays:</strong> 2× (1.5× for Sunday workers) | <strong>Holidays:</strong> 2× (1.5× for holiday workers) | <strong>Night Shift (18:00-06:00):</strong> Base pay + Night allowance</p>
+            <p><strong>Limits:</strong> Max 45 regular hours/week | Max 10 overtime hours/week | Max 3 overtime hours/day</p>
+        </div>
+    </div>
+</div>
+
+{% if current_user.is_admin %}
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">Export Monthly Timesheet</div>
+            <div class="card-body">
+                <form action="{{ url_for('export_monthly_timesheet') }}" method="GET">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="mb-3">
+                                <label for="month" class="form-label">Month</label>
+                                <select class="form-select" id="month" name="month">
+                                    {% for i in range(1, 13) %}
+                                    <option value="{{ i }}" {% if i == current_month %}selected{% endif %}>{{ month_names[i-1] }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="mb-3">
+                                <label for="year" class="form-label">Year</label>
+                                <select class="form-select" id="year" name="year">
+                                    {% for y in range(current_year-2, current_year+1) %}
+                                    <option value="{{ y }}" {% if y == current_year %}selected{% endif %}>{{ y }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <div class="mb-3 w-100">
+                                <button type="submit" class="btn btn-primary w-100">Export</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add month names to the dashboard template
+    document.addEventListener('DOMContentLoaded', function() {
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                           'July', 'August', 'September', 'October', 'November', 'December'];
+        const currentDate = new Date();
+        
+        // Set current month and year if selects exist
+        const monthSelect = document.getElementById('month');
+        const yearSelect = document.getElementById('year');
+        
+        if (monthSelect) {
+            monthSelect.value = currentDate.getMonth() + 1;
+        }
+        
+        if (yearSelect) {
+            yearSelect.value = currentDate.getFullYear();
+        }
+    });
+</script>
+{% endblock %}

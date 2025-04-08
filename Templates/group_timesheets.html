@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}TimeTracker - {{ group.name }} Timesheets{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1>{{ group.name }} - Group Timesheets</h1>
+        <p class="text-muted">Time period: {{ start_date }} to {{ end_date }}</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#dateRangeModal">
+            <i class="fas fa-calendar-alt"></i> Change Dates
+        </button>
+        <a href="{{ url_for('export_group_timesheet', group_id=group.id, start_date=start_date, end_date=end_date) }}" class="btn btn-success ms-2">
+            <i class="fas fa-file-export"></i> Export CSV
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>Timesheet Summary</span>
+                    <div>
+                        <span class="badge bg-primary p-2">{{ employee_data|length }} Employees</span>
+                        <span class="badge bg-success p-2 ms-2">{{ total_hours|round(2) }} Total Hours</span>
+                        <span class="badge bg-info p-2 ms-2">${{ total_pay|round(2) }} Total Pay</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if employee_data %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Title</th>
+                                <th>Location</th>
+                                <th class="text-end">Total Hours</th>
+                                <th class="text-end">Regular Hours</th>
+                                <th class="text-end">Overtime Hours</th>
+                                <th class="text-end">Weekend Hours</th>
+                                <th class="text-end">Regular Pay</th>
+                                <th class="text-end">Overtime Pay</th>
+                                <th class="text-end">Weekend Pay</th>
+                                <th class="text-end">Total Pay</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for employee in employee_data %}
+                            <tr>
+                                <td>{{ employee.name }}</td>
+                                <td>{{ employee.title }}</td>
+                                <td>{{ employee.location }}</td>
+                                <td class="text-end">{{ employee.total_hours|round(2) }}</td>
+                                <td class="text-end">{{ employee.regular_hours|round(2) }}</td>
+                                <td class="text-end">{{ employee.overtime_hours|round(2) }}</td>
+                                <td class="text-end">{{ employee.weekend_hours|round(2) }}</td>
+                                <td class="text-end">${{ employee.regular_pay|round(2) }}</td>
+                                <td class="text-end">${{ employee.overtime_pay|round(2) }}</td>
+                                <td class="text-end">${{ employee.weekend_pay|round(2) }}</td>
+                                <td class="text-end">${{ employee.total_pay|round(2) }}</td>
+                                <td>
+                                    <a href="{{ url_for('employee_timesheets', employee_id=employee.id) }}" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-history"></i> Details
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-dark">
+                            <tr>
+                                <td colspan="3" class="text-end fw-bold">TOTALS:</td>
+                                <td class="text-end">{{ total_hours|round(2) }}</td>
+                                <td class="text-end">{{ total_regular_hours|round(2) }}</td>
+                                <td class="text-end">{{ total_overtime_hours|round(2) }}</td>
+                                <td class="text-end">{{ total_weekend_hours|round(2) }}</td>
+                                <td class="text-end">${{ total_regular_pay|round(2) }}</td>
+                                <td class="text-end">${{ total_overtime_pay|round(2) }}</td>
+                                <td class="text-end">${{ total_weekend_pay|round(2) }}</td>
+                                <td class="text-end">${{ total_pay|round(2) }}</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <p>No timesheet data found for employees in this group during the selected time period.</p>
+                    <p>Try selecting a different date range or check if employees have recorded hours.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Date Range Modal -->
+<div class="modal fade" id="dateRangeModal" tabindex="-1" aria-labelledby="dateRangeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dateRangeModalLabel">Select Date Range</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('group_timesheets', group_id=group.id) }}" method="GET">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="start_date" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="end_date" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}" required>
+                    </div>
+                    <div class="text-muted">
+                        <small>Quick Select:</small>
+                        <div class="btn-group w-100 mt-1">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="this-week">This Week</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="last-week">Last Week</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="this-month">This Month</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="last-month">Last Month</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Apply</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Date range quick selectors
+        const startDateInput = document.getElementById('start_date');
+        const endDateInput = document.getElementById('end_date');
+        
+        // This week
+        document.getElementById('this-week').addEventListener('click', function() {
+            const today = new Date();
+            const first = today.getDate() - today.getDay(); // First day is the day of the month - the day of the week
+            const startDate = new Date(today.setDate(first));
+            const endDate = new Date(today);
+            endDate.setDate(startDate.getDate() + 6);
+            
+            startDateInput.value = formatDate(startDate);
+            endDateInput.value = formatDate(endDate);
+        });
+        
+        // Last week
+        document.getElementById('last-week').addEventListener('click', function() {
+            const today = new Date();
+            const first = today.getDate() - today.getDay() - 7; // First day of last week
+            const startDate = new Date(today.setDate(first));
+            const endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + 6);
+            
+            startDateInput.value = formatDate(startDate);
+            endDateInput.value = formatDate(endDate);
+        });
+        
+        // This month
+        document.getElementById('this-month').addEventListener('click', function() {
+            const today = new Date();
+            const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            
+            startDateInput.value = formatDate(startDate);
+            endDateInput.value = formatDate(endDate);
+        });
+        
+        // Last month
+        document.getElementById('last-month').addEventListener('click', function() {
+            const today = new Date();
+            const startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            const endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+            
+            startDateInput.value = formatDate(startDate);
+            endDateInput.value = formatDate(endDate);
+        });
+        
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+    });
+</script>
+{% endblock %}
