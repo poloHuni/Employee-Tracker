@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}TimeTracker - Employee Details{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1>{{ employee.first_name }} {{ employee.last_name }}</h1>
+        <p class="text-muted">
+            {% if employee.job_title %}{{ employee.job_title.title }} | {% endif %}
+            {% if employee.location %}{{ employee.location.name }} | {% endif %}
+            {{ employee.email }}
+        </p>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="btn-group">
+            <a href="{{ url_for('employee_timesheets', employee_id=employee.id) }}" class="btn btn-primary">
+                <i class="fas fa-clock"></i> Timesheets
+            </a>
+            {% if current_user.is_admin %}
+            <a href="{{ url_for('edit_employee', employee_id=employee.id) }}" class="btn btn-outline-secondary ms-2">
+                <i class="fas fa-edit"></i> Edit
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">Basic Information</div>
+            <div class="card-body">
+                <p><strong>Email:</strong> {{ employee.email }}</p>
+                <p><strong>Phone:</strong> {{ employee.phone }}</p>
+                <p><strong>Status:</strong> 
+                    {% if employee.is_active %}
+                    <span class="badge bg-success">Active</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Inactive</span>
+                    {% endif %}
+                </p>
+                {% if employee.additional_info %}
+                <p><strong>Additional Information:</strong> {{ employee.additional_info }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">Pay Rates</div>
+            <div class="card-body">
+                <p><strong>Regular Rate:</strong> ${{ employee.hourly_rate }}/hr</p>
+                <p><strong>Overtime Rate:</strong> ${{ employee.overtime_rate }}/hr</p>
+                <p><strong>Weekend Rate:</strong> ${{ employee.weekend_rate }}/hr</p>
+                
+                {% if employee.rate_function %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Using custom rate function: <strong>{{ employee.rate_function.name }}</strong>
+                    <div class="mt-2">
+                        <small>Weekday overtime formula: <code>{{ employee.rate_function.weekday_formula }}</code></small><br>
+                        <small>Weekend formula: <code>{{ employee.rate_function.weekend_formula }}</code></small>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">Special Status</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Sunday Worker:</strong> 
+                            {% if employee.is_sunday_worker %}
+                            <span class="badge bg-success">Yes</span> (1.5× pay on Sundays)
+                            {% else %}
+                            <span class="badge bg-secondary">No</span> (2× pay on Sundays)
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Holiday Worker:</strong> 
+                            {% if employee.is_holiday_worker %}
+                            <span class="badge bg-success">Yes</span> (1.5× pay on holidays)
+                            {% else %}
+                            <span class="badge bg-secondary">No</span> (2× pay on holidays)
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Night Worker:</strong> 
+                            {% if employee.is_night_worker %}
+                            <span class="badge bg-success">Yes</span>
+                            {% else %}
+                            <span class="badge bg-secondary">No</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Night Shift Allowance:</strong> {{ employee.night_shift_allowance * 100 }}%</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if custom_fields %}
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">Custom Fields</div>
+            <div class="card-body">
+                {% for field in custom_fields %}
+                <div class="mb-2">
+                    <strong>{{ field.name }}:</strong> 
+                    {% set value = get_custom_value(employee, field.id, field.field_type) %}
+                    {% if field.field_type == 'text' or field.field_type == 'select' %}
+                        {{ value or "-" }}
+                    {% elif field.field_type == 'number' %}
+                        {{ value|default('-') }}
+                    {% elif field.field_type == 'boolean' %}
+                        {% if value %}Yes{% else %}No{% endif %}
+                    {% elif field.field_type == 'date' %}
+                        {{ value|date_format or "-" }}
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">Recent Activity</div>
+            <div class="card-body">
+                <h5>Last 5 Timesheets</h5>
+                {% if recent_timesheets %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Clock In</th>
+                                <th>Clock Out</th>
+                                <th>Hours</th>
+                                <th>Type</th>
+                                <th>Pay</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ts in recent_timesheets %}
+                            <tr>
+                                <td>{{ ts.clock_in.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ ts.clock_in.strftime('%H:%M') }}</td>
+                                <td>{{ ts.clock_out.strftime('%H:%M') if ts.clock_out else 'Active' }}</td>
+                                <td>{{ ts.calculate_hours()|round(2) }}</td>
+                                <td>
+                                    {% if ts.is_public_holiday %}
+                                    <span class="badge bg-warning">Holiday</span>
+                                    {% elif ts.is_sunday() %}
+                                    <span class="badge bg-info">Sunday</span>
+                                    {% elif ts.is_saturday() %}
+                                    <span class="badge bg-light text-dark">Saturday</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Weekday</span>
+                                    {% endif %}
+                                </td>
+                                <td>${{ ts.calculate_pay()|round(2) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('employee_timesheets', employee_id=employee.id) }}" class="btn btn-outline-primary">
+                        <i class="fas fa-clock"></i> View All Timesheets
+                    </a>
+                </div>
+                {% else %}
+                <div class="alert alert-light">
+                    No recent timesheets found for this employee.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}TimeTracker - Import Configuration{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1>Import Configuration</h1>
+        <p class="text-muted">Customize your employee import settings</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{{ url_for('import_employees') }}" class="btn btn-primary">
+            <i class="fas fa-file-import"></i> Import Employees
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <form method="POST">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Standard Fields</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Toggle switches to mark fields as required during import</p>
+
+                    <div class="row">
+                        {% for field in standard_fields %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card">
+                                <div class="card-body p-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="field_{{ field.name }}" 
+                                               name="required_fields" value="{{ field.name }}" 
+                                               {% if field.is_required %}checked{% endif %}
+                                               {% if field.name in ['first_name', 'last_name'] %}disabled{% endif %}>
+                                        <label class="form-check-label" for="field_{{ field.name }}">
+                                            {{ field.display_name }}
+                                            {% if field.name in ['first_name', 'last_name'] %}
+                                            <span class="text-danger">*</span>
+                                            {% endif %}
+                                        </label>
+                                    </div>
+                                    <small class="form-text text-muted">{{ field.description }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> First name and last name are always required and cannot be disabled.
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Custom Fields</h5>
+                    <button type="button" id="add-custom-field" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-plus"></i> Add Custom Field
+                    </button>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Add your own custom fields to collect additional employee information</p>
+
+                    <div class="row mb-2">
+                        <div class="col-md-3"><strong>Field Name</strong></div>
+                        <div class="col-md-3"><strong>Field Type</strong></div>
+                        <div class="col-md-4"><strong>Description</strong></div>
+                        <div class="col-md-1"><strong>Required</strong></div>
+                        <div class="col-md-1"></div>
+                    </div>
+
+                    <div id="custom-fields-container">
+                        {% for field in custom_fields %}
+                        <div class="row mb-3 custom-field-row align-items-center">
+                            <div class="col-md-3">
+                                <input type="text" class="form-control" name="custom_field_names[]" value="{{ field.name }}" placeholder="Field Name" required>
+                                <input type="hidden" name="custom_field_ids[]" value="{{ field.id }}">
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" name="custom_field_types[]">
+                                    <option value="text" {% if field.field_type == 'text' %}selected{% endif %}>Text</option>
+                                    <option value="number" {% if field.field_type == 'number' %}selected{% endif %}>Number</option>
+                                    <option value="boolean" {% if field.field_type == 'boolean' %}selected{% endif %}>Yes/No</option>
+                                    <option value="date" {% if field.field_type == 'date' %}selected{% endif %}>Date</option>
+                                    <option value="select" {% if field.field_type == 'select' %}selected{% endif %}>Dropdown</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" name="custom_field_descriptions[]" value="{{ field.description }}" placeholder="Description">
+                            </div>
+                            <div class="col-md-1 text-center">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="custom_field_required[]" value="{{ loop.index0 }}" {% if field.is_required %}checked{% endif %}>
+                                </div>
+                            </div>
+                            <div class="col-md-1 text-center">
+                                <button type="button" class="btn btn-danger btn-sm remove-field"><i class="fas fa-times"></i></button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div id="no-custom-fields-message" class="alert alert-light text-center" {% if custom_fields %}style="display: none;"{% endif %}>
+                        No custom fields defined. Click "Add Custom Field" to create one.
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary">Save Import Configuration</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Custom Field Template (hidden) -->
+<template id="custom-field-template">
+    <div class="row mb-3 custom-field-row align-items-center">
+        <div class="col-md-3">
+            <input type="text" class="form-control" name="custom_field_names[]" placeholder="Field Name" required>
+            <input type="hidden" name="custom_field_ids[]" value="">
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" name="custom_field_types[]">
+                <option value="text">Text</option>
+                <option value="number">Number</option>
+                <option value="boolean">Yes/No</option>
+                <option value="date">Date</option>
+                <option value="select">Dropdown</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <input type="text" class="form-control" name="custom_field_descriptions[]" placeholder="Description">
+        </div>
+        <div class="col-md-1 text-center">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" name="custom_field_required[]">
+            </div>
+        </div>
+        <div class="col-md-1 text-center">
+            <button type="button" class="btn btn-danger btn-sm remove-field"><i class="fas fa-times"></i></button>
+        </div>
+    </div>
+</template>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const container = document.getElementById('custom-fields-container');
+        const noFieldsMessage = document.getElementById('no-custom-fields-message');
+        const template = document.getElementById('custom-field-template');
+        
+        // Add custom field
+        document.getElementById('add-custom-field').addEventListener('click', function() {
+            const newField = template.content.cloneNode(true);
+            container.appendChild(newField);
+            
+            // Update the required checkboxes to have unique values
+            updateRequiredFieldIndexes();
+            
+            // Hide the "no fields" message
+            noFieldsMessage.style.display = 'none';
+            
+            // Add remove handler to the new button
+            addRemoveHandlers();
+        });
+        
+        // Initial setup of remove handlers
+        addRemoveHandlers();
+        
+        function addRemoveHandlers() {
+            document.querySelectorAll('.remove-field').forEach(button => {
+                button.onclick = function() {
+                    const row = this.closest('.custom-field-row');
+                    row.remove();
+                    
+                    // If no custom fields left, show the message
+                    if (container.children.length === 0) {
+                        noFieldsMessage.style.display = 'block';
+                    }
+                    
+                    // Update indexes
+                    updateRequiredFieldIndexes();
+                };
+            });
+        }
+        
+        function updateRequiredFieldIndexes() {
+            document.querySelectorAll('input[name="custom_field_required[]"]').forEach((checkbox, index) => {
+                checkbox.value = index;
+            });
+        }
+    });
+</script>
+{% endblock %}

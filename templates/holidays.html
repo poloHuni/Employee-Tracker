@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}TimeTracker - Holidays{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1>Manage Holidays</h1>
+        <p class="text-muted">Set up company holidays for proper overtime pay calculation</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{{ url_for('calendar_view') }}" class="btn btn-outline-primary me-2">
+            <i class="fas fa-calendar-alt"></i> Calendar View
+        </a>
+        <a href="{{ url_for('add_holiday') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Holiday
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Holidays</h5>
+                <form class="d-inline-flex" method="GET" action="{{ url_for('holidays') }}">
+                    <div class="input-group input-group-sm">
+                        <select class="form-select form-select-sm" name="start_year">
+                            {% for y in available_years %}
+                            <option value="{{ y }}" {% if y == start_year %}selected{% endif %}>{{ y }}</option>
+                            {% endfor %}
+                        </select>
+                        <span class="input-group-text">to</span>
+                        <select class="form-select form-select-sm" name="end_year">
+                            {% for y in available_years %}
+                            <option value="{{ y }}" {% if y == end_year %}selected{% endif %}>{{ y }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-outline-light">Filter</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-body">
+                {% if holidays %}
+                    {% for year, months in holidays_by_month.items() %}
+                    <div class="year-section mb-4">
+                        <h3>{{ year }}</h3>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Holiday</th>
+                                        <th>Description</th>
+                                        <th>Paid</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for month, month_holidays in months.items() %}
+                                    <tr class="table-light">
+                                        <th colspan="5">{{ month_names[month-1] }}</th>
+                                    </tr>
+                                    {% for holiday in month_holidays %}
+                                    <tr>
+                                        <td>{{ holiday.date.strftime('%Y-%m-%d') }}</td>
+                                        <td>{{ holiday.name }}</td>
+                                        <td>{{ holiday.description }}</td>
+                                        <td>
+                                            {% if holiday.is_paid %}
+                                            <span class="badge bg-success">Paid</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">Unpaid</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('edit_holiday', holiday_id=holiday.id) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </a>
+                                            <a href="{{ url_for('delete_holiday', holiday_id=holiday.id) }}" class="btn btn-sm btn-outline-danger ms-1" 
+                                               onclick="return confirm('Are you sure you want to delete this holiday?');">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="alert alert-info">
+                    <p>No holidays found for the selected years. Click "Add Holiday" to create your first holiday entry.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Information Card -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Holiday Pay Calculation</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Employee Type</h5>
+                        <ul>
+                            <li><strong>Regular Employees:</strong> Paid at 2× their regular hourly rate on holidays</li>
+                            <li><strong>Holiday Workers:</strong> Paid at 1.5× their regular hourly rate on holidays (these are employees who normally work holidays)</li>
+                        </ul>
+                        <p>You can mark employees as holiday workers in their employee profile under "Special Work Schedule Settings".</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>How Holidays Are Applied</h5>
+                        <ul>
+                            <li>The system automatically checks if a timesheet date falls on a holiday</li>
+                            <li>Any date marked as a holiday in this calendar will apply the appropriate holiday pay rate</li>
+                            <li>You can also manually mark individual timesheets as holidays from the employee timesheet view</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

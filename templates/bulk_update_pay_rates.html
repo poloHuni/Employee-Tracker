@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}TimeTracker - Bulk Update Pay Rates{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1>Bulk Update Pay Rates</h1>
+        <p class="text-muted">Update hourly, overtime, and weekend rates for all employees with a specific job title.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">Update Pay Rates by Job Title</div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="job_title_id" class="form-label">Select Job Title</label>
+                        <select class="form-select" id="job_title_id" name="job_title_id" required>
+                            <option value="">-- Select Job Title --</option>
+                            {% for title in job_titles %}
+                            <option value="{{ title.id }}">{{ title.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> This will update pay rates for <strong>all employees</strong> with the selected job title.
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="hourly_rate" class="form-label">Regular Pay Rate ($)</label>
+                                <input type="number" step="0.01" min="0" class="form-control" id="hourly_rate" name="hourly_rate" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="overtime_rate" class="form-label">Weekday Overtime Rate ($)</label>
+                                <input type="number" step="0.01" min="0" class="form-control" id="overtime_rate" name="overtime_rate" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="weekend_rate" class="form-label">Weekend Rate ($)</label>
+                                <input type="number" step="0.01" min="0" class="form-control" id="weekend_rate" name="weekend_rate" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="is_night_worker" name="is_night_worker">
+                                <label class="form-check-label" for="is_night_worker">
+                                    Night Shift Worker
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="night_shift_allowance" class="form-label">Night Shift Allowance</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" min="0" max="1" class="form-control" id="night_shift_allowance" name="night_shift_allowance" value="0.1">
+                                    <span class="input-group-text">×</span>
+                                </div>
+                                <div class="form-text">Default: 0.1 (10%)</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="rate_function_id" class="form-label">Pay Rate Function (Optional)</label>
+                        <select class="form-select" id="rate_function_id" name="rate_function_id">
+                            <option value="">-- No Custom Function --</option>
+                            {% for function in rate_functions %}
+                            <option value="{{ function.id }}">{{ function.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Apply a custom rate function to all employees with this job title.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="confirm" required>
+                            <label class="form-check-label" for="confirm">
+                                I confirm that I want to update pay rates for all employees with this job title
+                            </label>
+                        </div>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Update Pay Rates</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">Current Pay Rates by Job Title</div>
+            <div class="card-body">
+                <div id="jobTitleInfo" class="alert alert-info">
+                    Select a job title above to see current pay rate information.
+                </div>
+                <div id="employeeList" style="display: none;">
+                    <h5>Employees with this job title:</h5>
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="employeeTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Current Regular Rate</th>
+                                    <th>Current Overtime Rate</th>
+                                    <th>Current Weekend Rate</th>
+                                    <th>Night Worker</th>
+                                    <th>Night Allowance</th>
+                                    <th>Rate Function</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Will be populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const jobTitleSelect = document.getElementById('job_title_id');
+        const hourlyRateInput = document.getElementById('hourly_rate');
+        const overtimeRateInput = document.getElementById('overtime_rate');
+        const weekendRateInput = document.getElementById('weekend_rate');
+        const jobTitleInfo = document.getElementById('jobTitleInfo');
+        const employeeList = document.getElementById('employeeList');
+        const employeeTable = document.getElementById('employeeTable').getElementsByTagName('tbody')[0];
+        
+        jobTitleSelect.addEventListener('change', function() {
+            const selectedJobTitleId = this.value;
+            
+            if (!selectedJobTitleId) {
+                jobTitleInfo.style.display = 'block';
+                employeeList.style.display = 'none';
+                return;
+            }
+            
+            // Get employees with this job title via AJAX
+            fetch('/get_employees_by_job_title/' + selectedJobTitleId)
+                .then(response => response.json())
+                .then(data => {
+                    // Clear the table
+                    employeeTable.innerHTML = '';
+                    
+                    if (data.employees.length === 0) {
+                        jobTitleInfo.textContent = 'No employees found with this job title.';
+                        jobTitleInfo.style.display = 'block';
+                        employeeList.style.display = 'none';
+                        return;
+                    }
+                    
+                    // Calculate average pay rates for defaults
+                    let totalHourly = 0;
+                    let totalOvertime = 0;
+                    let totalWeekend = 0;
+                    let nightWorkersCount = 0;
+                    let nightAllowanceSum = 0;
+                    
+                    // Add each employee to the table
+                    data.employees.forEach(employee => {
+                        const row = employeeTable.insertRow();
+                        
+                        const nameCell = row.insertCell(0);
+                        const hourlyCell = row.insertCell(1);
+                        const overtimeCell = row.insertCell(2);
+                        const weekendCell = row.insertCell(3);
+                        const nightWorkerCell = row.insertCell(4);
+                        const nightAllowanceCell = row.insertCell(5);
+                        const functionCell = row.insertCell(6);
+                        
+                        nameCell.textContent = employee.name;
+                        hourlyCell.textContent = '$' + employee.hourly_rate.toFixed(2);
+                        overtimeCell.textContent = '$' + employee.overtime_rate.toFixed(2);
+                        weekendCell.textContent = '$' + employee.weekend_rate.toFixed(2);
+                        
+                        // Night shift information
+                        if (employee.is_night_worker) {
+                            nightWorkerCell.innerHTML = '<span class="badge bg-info">Yes</span>';
+                            nightWorkersCount++;
+                        } else {
+                            nightWorkerCell.textContent = 'No';
+                        }
+                        
+                        nightAllowanceCell.textContent = (employee.night_shift_allowance * 100).toFixed(0) + '%';
+                        nightAllowanceSum += employee.night_shift_allowance || 0;
+                        
+                        functionCell.textContent = employee.rate_function_name || 'None';
+                        
+                        totalHourly += employee.hourly_rate;
+                        totalOvertime += employee.overtime_rate;
+                        totalWeekend += employee.weekend_rate;
+                    });
+                    
+                    // Set default values to the average rates
+                    const avgHourly = totalHourly / data.employees.length;
+                    const avgOvertime = totalOvertime / data.employees.length;
+                    const avgWeekend = totalWeekend / data.employees.length;
+                    const avgNightAllowance = nightAllowanceSum / (nightWorkersCount || 1);
+                    
+                    hourlyRateInput.value = avgHourly.toFixed(2);
+                    overtimeRateInput.value = avgOvertime.toFixed(2);
+                    weekendRateInput.value = avgWeekend.toFixed(2);
+                    document.getElementById('night_shift_allowance').value = avgNightAllowance.toFixed(2);
+                    document.getElementById('is_night_worker').checked = nightWorkersCount > 0;
+                    
+                    // Show the employee list
+                    jobTitleInfo.style.display = 'none';
+                    employeeList.style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Error fetching employees:', error);
+                    jobTitleInfo.textContent = 'Error loading employee data. Please try again.';
+                    jobTitleInfo.style.display = 'block';
+                    employeeList.style.display = 'none';
+                });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}TimeTracker - Add Rate Function{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1>Add New Pay Rate Function</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">Function Information</div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Function Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="weekday_formula" class="form-label">Weekday Overtime Formula</label>
+                        <input type="text" class="form-control" id="weekday_formula" name="weekday_formula" required placeholder="e.g., base * 1.5">
+                        <div class="form-text">
+                            Use variables: <code>base</code> (regular rate), <code>overtime</code> (standard overtime rate)
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="weekend_formula" class="form-label">Weekend Formula</label>
+                        <input type="text" class="form-control" id="weekend_formula" name="weekend_formula" required placeholder="e.g., base * 2.0">
+                        <div class="form-text">
+                            Use variables: <code>base</code> (regular rate), <code>weekend</code> (standard weekend rate)
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> Formulas must be valid Python expressions and will be evaluated at runtime.
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Add Function</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

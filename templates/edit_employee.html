@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block title %}TimeTracker - Edit Employee{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1>Edit Employee: {{ employee.first_name }} {{ employee.last_name }}</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <form method="POST">
+            <div class="card mb-4">
+                <div class="card-header">Standard Information</div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="first_name" class="form-label">First Name</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" value="{{ employee.first_name }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="last_name" class="form-label">Last Name</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" value="{{ employee.last_name }}" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email" value="{{ employee.email }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Phone</label>
+                                <input type="text" class="form-control" id="phone" name="phone" value="{{ employee.phone }}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="job_title_id" class="form-label">Job Title</label>
+                                <select class="form-select" id="job_title_id" name="job_title_id">
+                                    <option value="">-- Select Job Title --</option>
+                                    {% for title in job_titles %}
+                                    <option value="{{ title.id }}" {% if employee.job_title_id == title.id %}selected{% endif %}>{{ title.title }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="location_id" class="form-label">Location</label>
+                                <select class="form-select" id="location_id" name="location_id">
+                                    <option value="">-- Select Location --</option>
+                                    {% for location in locations %}
+                                    <option value="{{ location.id }}" {% if employee.location_id == location.id %}selected{% endif %}>{{ location.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="hourly_rate" class="form-label">Regular Pay Rate ($)</label>
+                                <input type="number" step="0.01" min="0" class="form-control" id="hourly_rate" name="hourly_rate" value="{{ employee.hourly_rate }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="overtime_rate" class="form-label">Weekday Overtime Rate ($)</label>
+                                <input type="number" step="0.01" min="0" class="form-control" id="overtime_rate" name="overtime_rate" value="{{ employee.overtime_rate }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="weekend_rate" class="form-label">Weekend Rate ($)</label>
+                                <input type="number" step="0.01" min="0" class="form-control" id="weekend_rate" name="weekend_rate" value="{{ employee.weekend_rate }}" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Work Hours Settings -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    Work Hours Settings
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Set custom work hours for this employee. Leave empty to use job title or company default hours.
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="work_start_time" class="form-label">Work Start Time</label>
+                                <input type="time" class="form-control" id="work_start_time" name="work_start_time" 
+                                       value="{{ employee.work_start_time.strftime('%H:%M') if employee.work_start_time else '' }}">
+                                <div class="form-text">Custom start time for this employee.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="work_end_time" class="form-label">Work End Time</label>
+                                <input type="time" class="form-control" id="work_end_time" name="work_end_time" 
+                                       value="{{ employee.work_end_time.strftime('%H:%M') if employee.work_end_time else '' }}">
+                                <div class="form-text">Custom end time for this employee.</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <button type="button" id="clear-hours" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-times"></i> Clear Custom Hours
+                        </button>
+                        
+                        {% if employee.job_title %}
+                        <span class="ms-2 text-muted">
+                            {% if employee.job_title.work_start_time and employee.job_title.work_end_time %}
+                            Job title default: {{ employee.job_title.work_start_time.strftime('%H:%M') }} - {{ employee.job_title.work_end_time.strftime('%H:%M') }}
+                            {% else %}
+                            Company default: 
+                            {{ employee.company.default_work_start_time.strftime('%H:%M') if employee.company.default_work_start_time else '09:00' }} - 
+                            {{ employee.company.default_work_end_time.strftime('%H:%M') if employee.company.default_work_end_time else '17:00' }}
+                            {% endif %}
+                        </span>
+                        {% else %}
+                        <span class="ms-2 text-muted">
+                            Company default: 
+                            {{ employee.company.default_work_start_time.strftime('%H:%M') if employee.company.default_work_start_time else '09:00' }} - 
+                            {{ employee.company.default_work_end_time.strftime('%H:%M') if employee.company.default_work_end_time else '17:00' }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Special Work Schedule Settings -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    Special Work Schedule Settings
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="is_sunday_worker" name="is_sunday_worker" {% if employee.is_sunday_worker %}checked{% endif %}>
+                                <label class="form-check-label" for="is_sunday_worker">
+                                    Sunday Worker (1.5× on Sundays instead of 2×)
+                                </label>
+                                <div class="form-text">Check this if Sunday is a regular working day for this employee</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="is_holiday_worker" name="is_holiday_worker" {% if employee.is_holiday_worker %}checked{% endif %}>
+                                <label class="form-check-label" for="is_holiday_worker">
+                                    Holiday Worker (1.5× on holidays instead of 2×)
+                                </label>
+                                <div class="form-text">Check this if public holidays are regular working days for this employee</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="is_night_worker" name="is_night_worker" {% if employee.is_night_worker %}checked{% endif %}>
+                                <label class="form-check-label" for="is_night_worker">
+                                    Night Shift Worker
+                                </label>
+                                <div class="form-text">Check this if employee regularly works night shifts (18:00-06:00)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="night_shift_allowance" class="form-label">Night Shift Allowance Rate</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" min="0" max="1" class="form-control" id="night_shift_allowance" 
+                                           name="night_shift_allowance" value="{{ employee.night_shift_allowance|default(0.1) }}">
+                                    <span class="input-group-text">×</span>
+                                </div>
+                                <div class="form-text">Extra rate multiplier for night shift hours (e.g., 0.1 = 10% extra)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Custom Fields Section -->
+            {% if custom_fields %}
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    Custom Fields
+                </div>
+                <div class="card-body">
+                    {% for field in custom_fields %}
+                    <div class="mb-3">
+                        <label for="custom_{{ field.id }}" class="form-label">
+                            {{ field.name }}
+                            {% if field.is_required %}<span class="text-danger">*</span>{% endif %}
+                        </label>
+                        
+                        {% if field.field_type == 'text' %}
+                        <input type="text" class="form-control" id="custom_{{ field.id }}" 
+                               name="custom_{{ field.id }}" 
+                               value="{{ get_custom_value(employee, field.id, 'text') }}"
+                               {% if field.is_required %}required{% endif %}>
+                        
+                        {% elif field.field_type == 'number' %}
+                        <input type="number" step="any" class="form-control" id="custom_{{ field.id }}" 
+                               name="custom_{{ field.id }}"
+                               value="{{ get_custom_value(employee, field.id, 'number') }}"
+                               {% if field.is_required %}required{% endif %}>
+                        
+                        {% elif field.field_type == 'boolean' %}
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="custom_{{ field.id }}" 
+                                   name="custom_{{ field.id }}"
+                                   {% if get_custom_value(employee, field.id, 'boolean') %}checked{% endif %}>
+                            <label class="form-check-label" for="custom_{{ field.id }}">Yes</label>
+                        </div>
+                        
+                        {% elif field.field_type == 'date' %}
+                        <input type="date" class="form-control" id="custom_{{ field.id }}" 
+                               name="custom_{{ field.id }}"
+                               value="{{ get_custom_value(employee, field.id, 'date')|date_format }}"
+                               {% if field.is_required %}required{% endif %}>
+                               
+                        {% elif field.field_type == 'select' %}
+                        <input type="text" class="form-control" id="custom_{{ field.id }}" 
+                               name="custom_{{ field.id }}" 
+                               value="{{ get_custom_value(employee, field.id, 'text') }}"
+                               {% if field.is_required %}required{% endif %}>
+                        <div class="form-text">Enter the value from the available options.</div>
+                        {% endif %}
+                        
+                        {% if field.description %}
+                        <div class="form-text">{{ field.description }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="card mb-4">
+                <div class="card-header bg-light">Other Settings</div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="rate_function_id" class="form-label">Pay Rate Function (Optional)</label>
+                                <select class="form-select" id="rate_function_id" name="rate_function_id">
+                                    <option value="">-- No Custom Function --</option>
+                                    {% for function in rate_functions %}
+                                    <option value="{{ function.id }}" {% if employee.rate_function_id == function.id %}selected{% endif %}>{{ function.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">Custom functions can dynamically calculate overtime and weekend rates.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="additional_info" class="form-label">Additional Information</label>
+                        <textarea class="form-control" id="additional_info" name="additional_info" rows="3">{{ employee.additional_info }}</textarea>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="is_active" name="is_active" {% if employee.is_active %}checked{% endif %}>
+                        <label class="form-check-label" for="is_active">Active Employee</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary">Update Employee</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Calculate default overtime and weekend rates when hourly rate changes
+        const hourlyRateInput = document.getElementById('hourly_rate');
+        const overtimeRateInput = document.getElementById('overtime_rate');
+        const weekendRateInput = document.getElementById('weekend_rate');
+        
+        hourlyRateInput.addEventListener('input', function() {
+            const hourlyRate = parseFloat(this.value) || 0;
+            overtimeRateInput.value = (hourlyRate * 1.5).toFixed(2);
+            weekendRateInput.value = (hourlyRate * 2).toFixed(2);
+        });
+        
+        // Clear work hours button
+        document.getElementById('clear-hours').addEventListener('click', function() {
+            document.getElementById('work_start_time').value = '';
+            document.getElementById('work_end_time').value = '';
+        });
+    });
+</script>
+{% endblock %}

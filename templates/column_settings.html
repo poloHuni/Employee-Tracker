@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block title %}TimeTracker - Column Settings{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1>Customize Column Display Settings</h1>
+        <p class="text-muted">Configure which columns appear in different views of your TimeTracker</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <ul class="nav nav-tabs mb-4" id="columnTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab">
+                    Dashboard
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="employee-timesheet-tab" data-bs-toggle="tab" data-bs-target="#employee-timesheet" type="button" role="tab">
+                    Employee Timesheet
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="group-timesheet-tab" data-bs-toggle="tab" data-bs-target="#group-timesheet" type="button" role="tab">
+                    Group Timesheet
+                </button>
+            </li>
+        </ul>
+        
+        <form method="POST" action="{{ url_for('column_settings') }}">
+            <div class="tab-content" id="columnTabsContent">
+                <!-- Dashboard Columns -->
+                <div class="tab-pane fade show active" id="dashboard" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">Dashboard Columns</div>
+                        <div class="card-body">
+                            <p class="text-muted">Configure which columns appear in the main dashboard</p>
+                            
+                            <div id="dashboard-columns" class="sortable-columns">
+                                {% for column in dashboard_columns %}
+                                <div class="card mb-2 column-card {% if column.is_visible %}border-primary{% endif %}" data-id="{{ column.id }}">
+                                    <div class="card-body p-2">
+                                        <div class="row align-items-center">
+                                            <div class="col-auto">
+                                                <i class="fas fa-grip-vertical handle text-muted"></i>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" id="dashboard_visible_{{ column.id }}" 
+                                                           name="visible[dashboard][{{ column.id }}]" value="1" {% if column.is_visible %}checked{% endif %}>
+                                                    <label class="form-check-label" for="dashboard_visible_{{ column.id }}">
+                                                        <strong>{{ column.column_name }}</strong>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <input type="text" class="form-control" name="display[dashboard][{{ column.id }}]" 
+                                                       value="{{ column.display_name }}" placeholder="Display Name">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-text">Original name: {{ column.column_name }}</div>
+                                            </div>
+                                            <input type="hidden" name="order[dashboard][{{ column.id }}]" class="order-input" value="{{ column.display_order }}">
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Employee Timesheet Columns -->
+                <div class="tab-pane fade" id="employee-timesheet" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">Employee Timesheet Columns</div>
+                        <div class="card-body">
+                            <p class="text-muted">Configure which columns appear in individual employee timesheets</p>
+                            
+                            <div id="employee-timesheet-columns" class="sortable-columns">
+                                {% for column in employee_timesheet_columns %}
+                                <div class="card mb-2 column-card {% if column.is_visible %}border-primary{% endif %}" data-id="{{ column.id }}">
+                                    <div class="card-body p-2">
+                                        <div class="row align-items-center">
+                                            <div class="col-auto">
+                                                <i class="fas fa-grip-vertical handle text-muted"></i>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" id="emp_ts_visible_{{ column.id }}" 
+                                                           name="visible[employee_timesheet][{{ column.id }}]" value="1" {% if column.is_visible %}checked{% endif %}>
+                                                    <label class="form-check-label" for="emp_ts_visible_{{ column.id }}">
+                                                        <strong>{{ column.column_name }}</strong>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <input type="text" class="form-control" name="display[employee_timesheet][{{ column.id }}]" 
+                                                       value="{{ column.display_name }}" placeholder="Display Name">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-text">Original name: {{ column.column_name }}</div>
+                                            </div>
+                                            <input type="hidden" name="order[employee_timesheet][{{ column.id }}]" class="order-input" value="{{ column.display_order }}">
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Group Timesheet Columns -->
+                <div class="tab-pane fade" id="group-timesheet" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">Group Timesheet Columns</div>
+                        <div class="card-body">
+                            <p class="text-muted">Configure which columns appear in group timesheet views</p>
+                            
+                            <div id="group-timesheet-columns" class="sortable-columns">
+                                {% for column in group_timesheet_columns %}
+                                <div class="card mb-2 column-card {% if column.is_visible %}border-primary{% endif %}" data-id="{{ column.id }}">
+                                    <div class="card-body p-2">
+                                        <div class="row align-items-center">
+                                            <div class="col-auto">
+                                                <i class="fas fa-grip-vertical handle text-muted"></i>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" id="group_ts_visible_{{ column.id }}" 
+                                                           name="visible[group_timesheet][{{ column.id }}]" value="1" {% if column.is_visible %}checked{% endif %}>
+                                                    <label class="form-check-label" for="group_ts_visible_{{ column.id }}">
+                                                        <strong>{{ column.column_name }}</strong>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <input type="text" class="form-control" name="display[group_timesheet][{{ column.id }}]" 
+                                                       value="{{ column.display_name }}" placeholder="Display Name">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-text">Original name: {{ column.column_name }}</div>
+                                            </div>
+                                            <input type="hidden" name="order[group_timesheet][{{ column.id }}]" class="order-input" value="{{ column.display_order }}">
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-grid gap-2 mt-4">
+                <button type="button" id="reset-all-btn" class="btn btn-outline-danger">Reset to Default Settings</button>
+                <button type="submit" class="btn btn-primary">Save Column Settings</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Reset Confirmation Modal -->
+<div class="modal fade" id="resetConfirmModal" tabindex="-1" aria-labelledby="resetConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="resetConfirmModalLabel">Confirm Reset</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to reset all column settings to their default values? This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('reset_column_settings') }}" method="POST">
+                    <button type="submit" class="btn btn-danger">Reset All Settings</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .sortable-columns .handle {
+        cursor: grab;
+    }
+    .sortable-columns .column-card:hover {
+        border-color: #0d6efd;
+    }
+    .sortable-placeholder {
+        border: 1px dashed #ccc;
+        height: 58px;
+        margin-bottom: 0.5rem;
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Enable drag and drop sorting for each container
+        $('.sortable-columns').sortable({
+            handle: '.handle',
+            placeholder: 'sortable-placeholder',
+            update: function(event, ui) {
+                // Update the order inputs when items are reordered
+                $(this).find('.column-card').each(function(index) {
+                    // Set the order value (1-based)
+                    $(this).find('.order-input').val(index + 1);
+                    
+                    // Log for debugging
+                    console.log('Updated order for ' + $(this).data('id') + ' to ' + (index + 1));
+                });
+            }
+        });
+        
+        // Reset button handling
+        $('#reset-all-btn').click(function() {
+            $('#resetConfirmModal').modal('show');
+        });
+        
+        // Fix for checkbox visibility toggling
+        $('input[type="checkbox"][name^="visible"]').change(function() {
+            // Ensure the visibility status is being tracked
+            const cardElement = $(this).closest('.column-card');
+            if ($(this).is(':checked')) {
+                cardElement.addClass('border-primary');
+            } else {
+                cardElement.removeClass('border-primary');
+            }
+        });
+        
+        // Toggle all button (add for each section if needed)
+        $('.toggle-all-btn').click(function() {
+            const section = $(this).data('section');
+            const checked = $(this).prop('checked');
+            $(`input[name^="visible[${section}]"]`).prop('checked', checked);
+        });
+    });
+</script>
+{% endblock %}

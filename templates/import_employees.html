@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}TimeTracker - Import Employees{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1>Import Employees from Excel</h1>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{{ url_for('import_configuration') }}" class="btn btn-outline-primary me-2">
+            <i class="fas fa-cog"></i> Configure Import
+        </a>
+        <a href="{{ url_for('download_sample_excel') }}" class="btn btn-success">
+            <i class="fas fa-download"></i> Sample Template
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header">Upload Excel File</div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Select Excel File (.xlsx, .xls)</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".xlsx, .xls" required>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Import Employees</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">Import Configuration</div>
+            <div class="card-body">
+                <h5>Required Fields</h5>
+                <div class="row">
+                    {% for field in required_fields %}
+                    <div class="col-md-3 mb-2">
+                        <span class="badge bg-danger">{{ field.display_name }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <h5 class="mt-4">Optional Fields</h5>
+                <div class="row">
+                    {% for field in optional_fields %}
+                    <div class="col-md-3 mb-2">
+                        <span class="badge bg-secondary">{{ field.display_name }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                {% if custom_fields %}
+                <h5 class="mt-4">Custom Fields</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Field Name</th>
+                                <th>Type</th>
+                                <th>Required</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for field in custom_fields %}
+                            <tr>
+                                <td>{{ field.name }}</td>
+                                <td>
+                                    {% if field.field_type == 'text' %}
+                                        Text
+                                    {% elif field.field_type == 'number' %}
+                                        Number
+                                    {% elif field.field_type == 'boolean' %}
+                                        Yes/No
+                                    {% elif field.field_type == 'date' %}
+                                        Date
+                                    {% elif field.field_type == 'select' %}
+                                        Dropdown
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if field.is_required %}
+                                    <span class="badge bg-danger">Required</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Optional</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ field.description }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+                
+                <div class="alert alert-info mt-3">
+                    <p class="mb-0"><i class="fas fa-info-circle"></i> <strong>Tips:</strong></p>
+                    <ul class="mb-0 mt-2">
+                        <li>Your Excel file must include all required fields</li>
+                        <li>If email is not provided, it will be auto-generated based on first and last name</li>
+                        <li>If hourly rates are not provided, default values will be used</li>
+                        <li>For boolean fields (Yes/No), use "yes"/"no", "true"/"false", or 1/0</li>
+                        <li>If job titles or locations don't exist, they will be created automatically</li>
+                    </ul>
+                </div>
+                
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('import_configuration') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-cog"></i> Modify Import Configuration
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
