@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}TimeTracker - Holiday Calendar{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1>{{ month_name }} {{ year }} Calendar</h1>
+        <p class="text-muted">View and manage company holidays</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{{ url_for('holidays') }}" class="btn btn-outline-primary me-2">
+            <i class="fas fa-list"></i> List View
+        </a>
+        <a href="{{ url_for('add_holiday') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Holiday
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <div>
+                    <a href="{{ url_for('calendar_view', year=year, month=month-1 if month > 1 else 12, day=1) }}" class="btn btn-sm btn-outline-light me-2">
+                        <i class="fas fa-chevron-left"></i> Previous Month
+                    </a>
+                    <a href="{{ url_for('calendar_view', year=year, month=month+1 if month < 12 else 1, day=1) }}" class="btn btn-sm btn-outline-light">
+                        Next Month <i class="fas fa-chevron-right"></i>
+                    </a>
+                </div>
+                <div>
+                    <form class="d-inline-flex" method="GET" action="{{ url_for('calendar_view') }}">
+                        <select class="form-select form-select-sm me-2" name="month">
+                            {% for i in range(1, 13) %}
+                            <option value="{{ i }}" {% if i == month %}selected{% endif %}>{{ month_names[i-1] }}</option>
+                            {% endfor %}
+                        </select>
+                        <select class="form-select form-select-sm me-2" name="year">
+                            {% for y in available_years %}
+                            <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-outline-light">Go</button>
+                    </form>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered calendar-table">
+                        <thead>
+                            <tr>
+                                <th class="text-center">Sunday</th>
+                                <th class="text-center">Monday</th>
+                                <th class="text-center">Tuesday</th>
+                                <th class="text-center">Wednesday</th>
+                                <th class="text-center">Thursday</th>
+                                <th class="text-center">Friday</th>
+                                <th class="text-center">Saturday</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for week in cal %}
+                            <tr style="height: 100px;">
+                                {% for day in week %}
+                                {% if day == 0 %}
+                                <td class="bg-light"></td>
+                                {% else %}
+                                <td class="position-relative {% if day in holidays_by_day %}bg-warning{% elif loop.index == 1 or loop.index == 7 %}bg-light{% endif %}">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="fw-bold">{{ day }}</span>
+                                        {% if current_year == year and current_month == month and day == now.day %}
+                                        <span class="badge bg-primary">Today</span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    {% if day in holidays_by_day %}
+                                    <div class="holiday-entry bg-warning p-1 rounded my-1">
+                                        <div class="fw-bold">{{ holidays_by_day[day].name }}</div>
+                                        <div class="small">{{ holidays_by_day[day].description }}</div>
+                                        <div class="text-end mt-1">
+                                            <a href="{{ url_for('edit_holiday', holiday_id=holidays_by_day[day].id) }}" class="btn btn-sm btn-outline-dark">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    <div class="text-center mt-2">
+                                        <a href="{{ url_for('add_holiday', date=year|string + '-' + '%02d'|format(month) + '-' + '%02d'|format(day)) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-plus"></i> Add
+                                        </a>
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                {% endif %}
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="d-flex align-items-center">
+                    <div class="d-flex align-items-center me-3">
+                        <div class="color-box bg-warning me-2"></div>
+                        <span>Holiday</span>
+                    </div>
+                    <div class="d-flex align-items-center me-3">
+                        <div class="color-box bg-light me-2"></div>
+                        <span>Weekend</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="color-box bg-primary me-2"></div>
+                        <span>Today</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .calendar-table th, .calendar-table td {
+        text-align: center;
+        vertical-align: top;
+        padding: 0.5rem;
+    }
+    
+    .calendar-table td {
+        height: 120px;
+        width: 14.28%;
+    }
+    
+    .color-box {
+        width: 16px;
+        height: 16px;
+        display: inline-block;
+        border-radius: 3px;
+    }
+    
+    .holiday-entry {
+        font-size: 0.85rem;
+    }
+</style>
+{% endblock %}

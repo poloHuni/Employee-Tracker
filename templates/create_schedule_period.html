@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}TimeTracker - Create Schedule Period{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1>Create New Schedule Period</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">Period Details</div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Period Name (Optional)</label>
+                        <input type="text" class="form-control" id="name" name="name">
+                        <div class="form-text">A descriptive name for this schedule period. If left blank, dates will be used.</div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="start_date" class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="start_date" name="start_date" value="{{ default_start }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="end_date" class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="end_date" name="end_date" value="{{ default_end }}" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> Quick Options
+                            <div class="btn-group mt-2">
+                                <button type="button" class="btn btn-sm btn-outline-primary" id="nextWeekBtn">Next Week</button>
+                                <button type="button" class="btn btn-sm btn-outline-primary" id="twoWeeksBtn">Two Weeks</button>
+                                <button type="button" class="btn btn-sm btn-outline-primary" id="nextMonthBtn">Next Month</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Create Period</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const startDateInput = document.getElementById('start_date');
+        const endDateInput = document.getElementById('end_date');
+        
+        // Set next week button
+        document.getElementById('nextWeekBtn').addEventListener('click', function() {
+            const today = new Date();
+            // Find next Monday
+            const nextMonday = new Date(today);
+            nextMonday.setDate(today.getDate() + (8 - today.getDay()) % 7);
+            
+            // Set end date to Sunday
+            const nextSunday = new Date(nextMonday);
+            nextSunday.setDate(nextMonday.getDate() + 6);
+            
+            // Update inputs
+            startDateInput.value = formatDate(nextMonday);
+            endDateInput.value = formatDate(nextSunday);
+        });
+        
+        // Set two weeks button
+        document.getElementById('twoWeeksBtn').addEventListener('click', function() {
+            const today = new Date();
+            // Find next Monday
+            const nextMonday = new Date(today);
+            nextMonday.setDate(today.getDate() + (8 - today.getDay()) % 7);
+            
+            // Set end date to Sunday after next
+            const endSunday = new Date(nextMonday);
+            endSunday.setDate(nextMonday.getDate() + 13);
+            
+            // Update inputs
+            startDateInput.value = formatDate(nextMonday);
+            endDateInput.value = formatDate(endSunday);
+        });
+        
+        // Set next month button
+        document.getElementById('nextMonthBtn').addEventListener('click', function() {
+            const today = new Date();
+            // First day of next month
+            const firstDayNextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+            
+            // Last day of next month
+            const lastDayNextMonth = new Date(today.getFullYear(), today.getMonth() + 2, 0);
+            
+            // Update inputs
+            startDateInput.value = formatDate(firstDayNextMonth);
+            endDateInput.value = formatDate(lastDayNextMonth);
+        });
+        
+        // Helper function to format date as YYYY-MM-DD
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+    });
+</script>
+{% endblock %}

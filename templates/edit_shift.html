@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}TimeTracker - Edit Shift{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1>Edit Shift: {{ shift.name }}</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">Shift Information</div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Shift Name</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ shift.name }}" required>
+                        <div class="form-text">Example: Morning Shift, Night Shift, etc.</div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="start_time" class="form-label">Start Time</label>
+                                <input type="time" class="form-control" id="start_time" name="start_time" value="{{ shift.start_time.strftime('%H:%M') }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="end_time" class="form-label">End Time</label>
+                                <input type="time" class="form-control" id="end_time" name="end_time" value="{{ shift.end_time.strftime('%H:%M') }}" required>
+                                <div class="form-text">For overnight shifts, end time should be after start time (e.g., start: 22:00, end: 06:00)</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="color" class="form-label">Color</label>
+                        <input type="color" class="form-control form-control-color" id="color" name="color" value="{{ shift.color }}">
+                        <div class="form-text">Choose a color for this shift to display in the calendar</div>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="is_night_shift" name="is_night_shift" {% if shift.is_night_shift %}checked{% endif %}>
+                        <label class="form-check-label" for="is_night_shift">This is a night shift</label>
+                        <div class="form-text">Night shifts automatically apply night shift allowance for eligible employees</div>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="is_active" name="is_active" {% if shift.is_active %}checked{% endif %}>
+                        <label class="form-check-label" for="is_active">Active</label>
+                        <div class="form-text">Inactive shifts won't appear in the scheduling calendar</div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Update Shift</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

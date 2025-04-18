@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}TimeTracker - Company Settings{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1>Company Settings</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">Edit Company Information</div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="company_name" class="form-label">Company Name</label>
+                        <input type="text" class="form-control" id="company_name" name="company_name" value="{{ company.name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="standard_hours" class="form-label">Standard Weekly Hours (before overtime)</label>
+                        <input type="number" class="form-control" id="standard_hours" name="standard_hours" value="{{ company.standard_hours }}" min="1" max="168" required>
+                        <div class="form-text">This determines when overtime begins for your employees.</div>
+                    </div>
+                    
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">Work Hours Settings</div>
+                        <div class="card-body">
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="enforce_work_hours" name="enforce_work_hours" {% if company.enforce_work_hours %}checked{% endif %}>
+                                <label class="form-check-label" for="enforce_work_hours">Enforce work hours</label>
+                                <div class="form-text">If checked, early clock-ins won't count until the work start time.</div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="default_work_start_time" class="form-label">Default Work Start Time</label>
+                                        <input type="time" class="form-control" id="default_work_start_time" name="default_work_start_time" 
+                                               value="{{ company.default_work_start_time.strftime('%H:%M') if company.default_work_start_time else '09:00' }}">
+                                        <div class="form-text">Default start time for all employees.</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="default_work_end_time" class="form-label">Default Work End Time</label>
+                                        <input type="time" class="form-control" id="default_work_end_time" name="default_work_end_time" 
+                                               value="{{ company.default_work_end_time.strftime('%H:%M') if company.default_work_end_time else '17:00' }}">
+                                        <div class="form-text">Default end time for all employees.</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> These are company-wide default work hours. You can also set custom hours per job title, employee, or group.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="default_night_allowance" class="form-label">Default Night Shift Allowance Rate</label>
+                        <div class="input-group">
+                            <input type="number" step="0.01" min="0" max="1" class="form-control" id="default_night_allowance" name="default_night_allowance" value="{{ company.default_night_allowance }}">
+                            <span class="input-group-text">×</span>
+                        </div>
+                        <div class="form-text">Default night shift allowance multiplier for all employees (e.g., 0.1 = 10% extra)</div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Update Settings</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

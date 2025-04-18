@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}TimeTracker - Time Off Requests{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1>Time Off Requests</h1>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{{ url_for('request_time_off') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Request Time Off
+        </a>
+    </div>
+</div>
+
+<!-- Pending Requests -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">Pending Requests</h5>
+            </div>
+            <div class="card-body">
+                {% if pending_requests %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Days</th>
+                                <th>Reason</th>
+                                <th>Requested On</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for request in pending_requests %}
+                            <tr>
+                                <td>{{ request.employee.first_name }} {{ request.employee.last_name }}</td>
+                                <td>{{ request.start_date.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ request.end_date.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ request.days_count() }}</td>
+                                <td>{{ request.reason }}</td>
+                                <td>{{ request.requested_on.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>
+                                    {% if current_user.is_admin %}
+                                    <div class="btn-group">
+                                        <a href="{{ url_for('approve_time_off', request_id=request.id) }}" class="btn btn-success btn-sm">
+                                            <i class="fas fa-check"></i> Approve
+                                        </a>
+                                        <a href="{{ url_for('deny_time_off', request_id=request.id) }}" class="btn btn-danger btn-sm ms-2">
+                                            <i class="fas fa-times"></i> Deny
+                                        </a>
+                                    </div>
+                                    {% else %}
+                                    <a href="{{ url_for('cancel_time_off', request_id=request.id) }}" class="btn btn-outline-danger btn-sm" onclick="return confirm('Are you sure you want to cancel this request?');">
+                                        <i class="fas fa-trash"></i> Cancel
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center">No pending time off requests.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Approved Requests -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Approved Requests</h5>
+            </div>
+            <div class="card-body">
+                {% if approved_requests %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Days</th>
+                                <th>Reason</th>
+                                <th>Approved By</th>
+                                <th>Approved On</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for request in approved_requests %}
+                            <tr>
+                                <td>{{ request.employee.first_name }} {{ request.employee.last_name }}</td>
+                                <td>{{ request.start_date.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ request.end_date.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ request.days_count() }}</td>
+                                <td>{{ request.reason }}</td>
+                                <td>{{ request.approver.username if request.approver else "N/A" }}</td>
+                                <td>{{ request.decided_on.strftime('%Y-%m-%d %H:%M') if request.decided_on else "N/A" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center">No approved time off requests.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Denied Requests -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Denied Requests</h5>
+            </div>
+            <div class="card-body">
+                {% if denied_requests %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Days</th>
+                                <th>Reason</th>
+                                <th>Denied By</th>
+                                <th>Denied On</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for request in denied_requests %}
+                            <tr>
+                                <td>{{ request.employee.first_name }} {{ request.employee.last_name }}</td>
+                                <td>{{ request.start_date.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ request.end_date.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ request.days_count() }}</td>
+                                <td>{{ request.reason }}</td>
+                                <td>{{ request.approver.username if request.approver else "N/A" }}</td>
+                                <td>{{ request.decided_on.strftime('%Y-%m-%d %H:%M') if request.decided_on else "N/A" }}</td>
+                                <td>{{ request.notes }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center">No denied time off requests.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

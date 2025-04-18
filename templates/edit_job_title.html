@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}TimeTracker - Edit Job Title{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1>Edit Job Title</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">Job Title Information</div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="title" name="title" value="{{ job_title.title }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3">{{ job_title.description }}</textarea>
+                    </div>
+                    
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">Work Hours Settings</div>
+                        <div class="card-body">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> Set custom work hours for employees with this job title. Leave empty to use company default hours.
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="work_start_time" class="form-label">Work Start Time</label>
+                                        <input type="time" class="form-control" id="work_start_time" name="work_start_time" 
+                                               value="{{ job_title.work_start_time.strftime('%H:%M') if job_title.work_start_time else '' }}">
+                                        <div class="form-text">Start time for employees with this job title.</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="work_end_time" class="form-label">Work End Time</label>
+                                        <input type="time" class="form-control" id="work_end_time" name="work_end_time" 
+                                               value="{{ job_title.work_end_time.strftime('%H:%M') if job_title.work_end_time else '' }}">
+                                        <div class="form-text">End time for employees with this job title.</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <button type="button" id="clear-hours" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-times"></i> Clear Custom Hours
+                                </button>
+                                <span class="ms-2 text-muted">Current company default: 
+                                    {{ company.default_work_start_time.strftime('%H:%M') if company.default_work_start_time else '09:00' }} - 
+                                    {{ company.default_work_end_time.strftime('%H:%M') if company.default_work_end_time else '17:00' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Update Job Title</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Clear work hours button
+        document.getElementById('clear-hours').addEventListener('click', function() {
+            document.getElementById('work_start_time').value = '';
+            document.getElementById('work_end_time').value = '';
+        });
+    });
+</script>
+{% endblock %}

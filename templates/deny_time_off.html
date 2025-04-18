@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}TimeTracker - Deny Time Off Request{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1>Deny Time Off Request</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">Request Details</div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <h5>Employee</h5>
+                    <p>{{ time_off.employee.first_name }} {{ time_off.employee.last_name }}</p>
+                    
+                    <h5>Dates</h5>
+                    <p>{{ time_off.start_date.strftime('%Y-%m-%d') }} to {{ time_off.end_date.strftime('%Y-%m-%d') }} ({{ time_off.days_count() }} days)</p>
+                    
+                    <h5>Reason</h5>
+                    <p>{{ time_off.reason }}</p>
+                </div>
+                
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Reason for Denial</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3" required></textarea>
+                        <div class="form-text">Please provide a reason why this time off request is being denied. This will be visible to the employee.</div>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> This action cannot be undone. The employee will be notified of your decision.
+                    </div>
+                    
+                    <div class="mt-4 d-flex justify-content-between">
+                        <a href="{{ url_for('time_off_requests') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-danger">Deny Request</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

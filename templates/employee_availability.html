@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}TimeTracker - Employee Availability{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1>Set Availability for {{ employee.first_name }} {{ employee.last_name }}</h1>
+        <p class="text-muted">Configure when this employee is available to work</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">Weekly Availability</div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Day</th>
+                                    <th>Available</th>
+                                    <th>Start Time</th>
+                                    <th>End Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for day in range(7) %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][day] }}</strong>
+                                    </td>
+                                    <td>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input day-toggle" type="checkbox" id="available_{{ day }}" name="available_{{ day }}" 
+                                                  {% if availabilities[day]['available'] %}checked{% endif %}
+                                                  data-day="{{ day }}">
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <input type="time" class="form-control time-input" id="start_time_{{ day }}" name="start_time_{{ day }}" 
+                                               value="{{ availabilities[day]['start_time'] }}"
+                                               {% if not availabilities[day]['available'] %}disabled{% endif %}>
+                                    </td>
+                                    <td>
+                                        <input type="time" class="form-control time-input" id="end_time_{{ day }}" name="end_time_{{ day }}" 
+                                               value="{{ availabilities[day]['end_time'] }}"
+                                               {% if not availabilities[day]['available'] %}disabled{% endif %}>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> Setting availability helps managers create schedules that work with your preferred hours.
+                            <ul class="mb-0 mt-2">
+                                <li>Times are in 24-hour format (e.g., 13:00 for 1:00 PM)</li>
+                                <li>If you're not available on a day, uncheck the "Available" toggle</li>
+                                <li>Make sure your availability covers your typical work hours</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 d-flex justify-content-between">
+                        <a href="{{ url_for('employee_details', employee_id=employee.id) if current_user.is_admin else url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Save Availability</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle time inputs based on availability
+        document.querySelectorAll('.day-toggle').forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                const day = this.dataset.day;
+                const startTime = document.getElementById(`start_time_${day}`);
+                const endTime = document.getElementById(`end_time_${day}`);
+                
+                startTime.disabled = !this.checked;
+                endTime.disabled = !this.checked;
+            });
+        });
+    });
+</script>
+{% endblock %}

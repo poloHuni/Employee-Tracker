@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}TimeTracker - Add Holiday{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1>Add New Holiday</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">Holiday Information</div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="date" class="form-label">Date</label>
+                        <input type="date" class="form-control" id="date" name="date" {% if request.args.get('date') %}value="{{ request.args.get('date') }}"{% endif %} required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Holiday Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="is_paid" name="is_paid" checked>
+                        <label class="form-check-label" for="is_paid">
+                            This is a paid holiday (applies special pay rates)
+                        </label>
+                        <div class="form-text">If checked, employees working on this day will receive holiday pay rates.</div>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Add Holiday</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

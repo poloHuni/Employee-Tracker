@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}TimeTracker - Schedule Periods{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1>Schedule Periods</h1>
+        <p class="text-muted">Create and manage scheduling periods</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{{ url_for('create_schedule_period') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Create New Period
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">All Schedule Periods</div>
+            <div class="card-body">
+                {% if periods %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Status</th>
+                                <th>Created By</th>
+                                <th>Published On</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for period in periods %}
+                            <tr>
+                                <td>{{ period.name or "Schedule " + period.start_date.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ period.start_date.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ period.end_date.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    {% if period.status == 'draft' %}
+                                    <span class="badge bg-warning">Draft</span>
+                                    {% else %}
+                                    <span class="badge bg-success">Published</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ period.creator.username }}</td>
+                                <td>{{ period.published_on.strftime('%Y-%m-%d %H:%M') if period.published_on else "Not published" }}</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{{ url_for('schedule_builder', period_id=period.id) }}" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-calendar-alt"></i> Edit
+                                        </a>
+                                        {% if period.status == 'draft' %}
+                                        <a href="{{ url_for('publish_schedule', period_id=period.id) }}" class="btn btn-success btn-sm ms-2">
+                                            <i class="fas fa-check"></i> Publish
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center">No schedule periods found. <a href="{{ url_for('create_schedule_period') }}">Create a new period</a> to get started.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">About Schedule Periods</div>
+            <div class="card-body">
+                <p>Schedule periods are predefined date ranges for which you can create employee schedules. Using the schedule builder, you can assign shifts to employees for the entire period.</p>
+                
+                <h5 class="mt-3">Workflow</h5>
+                <ol>
+                    <li>Create a new schedule period</li>
+                    <li>Assign shifts to employees in the schedule builder</li>
+                    <li>Publish the schedule when it's ready</li>
+                    <li>Employees can then view their assigned shifts</li>
+                </ol>
+                
+                <h5 class="mt-3">Draft vs. Published</h5>
+                <p>Draft schedules are only visible to managers, while published schedules are visible to all employees.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
